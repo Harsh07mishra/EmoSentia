@@ -2,7 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip, AudioFileClip
-from fer import FER  # FER for facial emotion detection
+from fer import FER  # Emotion detection
 import whisper
 from textblob import TextBlob
 import os
@@ -40,7 +40,7 @@ if uploaded_file is not None:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     processed_video = cv2.VideoWriter('processed_video.mp4', fourcc, frame_rate, (width, height))
 
-    # Initialize FER detector
+    # Initialize FER emotion detector
     emotion_detector = FER()
 
     # Process each frame
@@ -49,18 +49,17 @@ if uploaded_file is not None:
         if not ret:
             break
         
-        # Detect faces and emotions in the frame
-        try:
-            emotions, _ = emotion_detector.top_emotion(frame)
+        # Detect faces and emotions in the frame using OpenCV Haar Cascade
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
-            # Draw bounding box and emotion label
-            x, y, w, h = 50, 50, 150, 150  # Example coordinates for bounding box, you can use a face detection library to get these
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green rectangle
+        for (x, y, w, h) in faces:
+            # Get the emotion
+            emotions, _ = emotion_detector.top_emotion(frame)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Draw rectangle
             cv2.putText(frame, emotions, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-        except Exception as e:
-            st.error(f"Error processing frame {frame_idx}: {e}")
-        
         # Write the processed frame to the output video
         processed_video.write(frame)
 
