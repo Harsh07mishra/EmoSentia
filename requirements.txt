@@ -1,4 +1,4 @@
-fer==0.2
+FER==19.0.0
 streamlit
 opencv-python
 moviepy
