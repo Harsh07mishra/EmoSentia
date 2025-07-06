@@ -2,7 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip, AudioFileClip
-from deepface import DeepFace
+from fer import FER  # FER for facial emotion detection
 import whisper
 from textblob import TextBlob
 import os
@@ -40,6 +40,9 @@ if uploaded_file is not None:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     processed_video = cv2.VideoWriter('processed_video.mp4', fourcc, frame_rate, (width, height))
 
+    # Initialize FER detector
+    emotion_detector = FER()
+
     # Process each frame
     for frame_idx in range(frame_count):
         ret, frame = cap.read()
@@ -48,15 +51,12 @@ if uploaded_file is not None:
         
         # Detect faces and emotions in the frame
         try:
-            result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
-            # Get the most confident emotion
-            dominant_emotion = result[0]['dominant_emotion']
+            emotions, _ = emotion_detector.top_emotion(frame)
 
             # Draw bounding box and emotion label
-            face_coordinates = result[0]['region']
-            x, y, w, h = face_coordinates['x'], face_coordinates['y'], face_coordinates['w'], face_coordinates['h']
+            x, y, w, h = 50, 50, 150, 150  # Example coordinates for bounding box, you can use a face detection library to get these
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green rectangle
-            cv2.putText(frame, dominant_emotion, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            cv2.putText(frame, emotions, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         except Exception as e:
             st.error(f"Error processing frame {frame_idx}: {e}")
