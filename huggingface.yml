@@ -1,0 +1,4 @@
+sdk: gradio
+app_file: app.py
+apt_packages:
+  - ffmpeg
